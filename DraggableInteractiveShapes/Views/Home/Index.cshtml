@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR MoveShape Demo</title>
+    <style>
+
+        #services ul {
+            display: block;
+            float: right;
+            width: 230px;
+            color: #F6F6F6;
+            background-color: #F6F6F6;
+            border-radius: 5px;
+            padding-top: 6px;
+            padding-right: 20px;
+            padding-left: 9px;
+        }
+
+        .card {
+            color: #000000;
+            background-color: yellow;
+            width: 230px;
+            height: auto;
+            display: block;
+            position: absolute;
+            padding-bottom: 6px;
+            padding-top: 6px;
+            padding-right: 6px;
+            padding-left: 6px;
+            border: 1px solid #6BA3A3;
+        }
+
+            .card h4 {
+                border-bottom: 1px dotted #6BA3A3;
+                border-top: 1px dotted #6BA3A3;
+            }
+    </style>
+</head>
+<body>
+    
+        <script src="~/Scripts/jquery-1.12.4.min.js"></script>
+        <script src="~/Scripts/jquery-ui.js"></script>
+        <script src="~/Scripts/jquery.signalR-2.4.0.min.js"></script>
+        <script src="/signalr/hubs"></script>
+        <script>
+            let moveShapeHub;
+            let cardCounter = 1;
+
+            // Send a maximum of 10 messages per second
+            // (mouse movements trigger a lot of messages)
+            let messageFrequency = 10;
+
+            // Determine how often to send messages in
+            // time to abide by the messageFrequency
+            let updateRate = 1000 / messageFrequency
+            let shapeModel = {
+                Id: '',
+                Left: 0,
+                Top: 0,
+                Title: '',
+                Text: ''
+            };
+            let moved = false;
+
+            function uuidv4() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+
+            function updateServerModel() {
+                // Only update server if we have a new movement
+                if (moved) {
+                    moveShapeHub.server.updateShapePostion(shapeModel);
+                    moved = false;
+                }
+            }
+
+            function makeElementDraggable($element) {
+                $element.draggable({
+                    drag: function () {
+                        shapeModel = $(this).offset();
+                        shapeModel.Id = this.id;
+                        moved = true;
+                    },
+                    stop: function () {
+                        shapeModel = $(this).offset();
+                        shapeModel.Id = this.id;
+                        moveShapeHub.server.updateShapePostion(shapeModel);
+                    }
+                });
+            }
+
+            function addNewCardToDom(shapeModel) {
+                let cardHtmlStr = `<li class="card" id=${shapeModel.Id}>
+                                        <h4>${shapeModel.Title}</h4>
+                                        <p>${shapeModel.Text}</p>
+                                         </li>`;
+                $("#services ul").append(cardHtmlStr);
+            }
+
+            function addNewCard() {
+                
+                let title = $("#Title").val();
+                let text = $("#Text").val();
+                let id = uuidv4();
+
+                let newShape = { Id: id, Left: 200, Top: 0, Title: title, Text: text };
+
+                addNewCardToDom(newShape);
+                adjustShapePosition(newShape);
+
+                makeElementDraggable($("#" + id));                
+
+                moveShapeHub.server.addNewShape(newShape);
+            }
+
+            function adjustShapePosition(shapeModel) {
+                $("#" + shapeModel.Id).css({ left: shapeModel.Left, top: shapeModel.Top });
+            }
+
+            $(document).ready(function () {
+                
+                moveShapeHub = $.connection.moveShapeHub;                   
+               
+                moveShapeHub.client.updateShape = function (shapeModel) {
+                    adjustShapePosition(shapeModel);
+                    //$("#" + model.Id).css({ left: model.Left, top: model.Top });
+                };
+
+                moveShapeHub.client.newShapeAdded = function (shapeModel) {
+                    debugger;
+                    addNewCardToDom(shapeModel);
+                    makeElementDraggable($("#" + shapeModel.Id));
+
+                    adjustShapePosition(shapeModel);
+                    //$("#" + model.Id).css({ left: model.Left, top: model.Top });
+                };
+
+                $.connection.hub.start().done(function () {
+
+                    //makeElementDraggable($(".card"));
+                    // Start the client side server update interval
+                    setInterval(updateServerModel, updateRate);
+                    moveShapeHub.server.firstHandShake();
+                });
+            });
+            
+            
+
+        </script>
+        
+
+    @*<form method="post">*@
+
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" name="Title" id="Title" placeholder="Title">
+        </div>
+        <div class="form-group">
+            <label for="text">Text</label>
+            <textarea class="form-control rounded-0" name="Text" id="Text"></textarea>
+        </div>
+        <span id="button1">
+            <button type="button" onclick="addNewCard();" class="btn btn-primary">Add</button>
+        </span>
+    @*</form>*@
+
+    <div id="services">
+        <ul>
+            @*-----The @cardcounter adds the individual card id in my example------*@
+            @*<li class="card" id="@cardcounter">*@
+
+
+            @*<li class="card" id="card1">
+                
+                <h4>Title</h4>
+                <p>Text</p>
+
+            </li>*@
+        </ul>
+    </div>
+
+</body>
+</html>
