@@ -47,7 +47,7 @@
                     stop: function () {
                         shapeModel = $(this).offset();
                         shapeModel.id = this.id;
-                        moveShapeHub.server.updateModel(shapeModel);
+                        moveShapeHub.server.updateShapePostion(shapeModel);
                     }
                 });
                 // Start the client side server update interval
@@ -58,7 +58,7 @@
             function updateServerModel() {
                 // Only update server if we have a new movement
                 if (moved) {
-                    moveShapeHub.server.updateModel(shapeModel);
+                    moveShapeHub.server.updateShapePostion(shapeModel);
                     moved = false;
                 }
             }

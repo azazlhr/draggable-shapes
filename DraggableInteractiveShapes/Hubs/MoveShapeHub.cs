@@ -18,23 +18,14 @@ namespace DraggableInteractiveDivs.Hubs
         {
             Parallel.ForEach(movingShapesDictionary, (movingShape) =>
             {
-                //Clients.Caller.updateShape(movingShape.Value);
-                Clients.Caller.newShapeAdded(movingShape.Value);
+                Clients.Caller.updateShape(movingShape.Value);
             });
         }
 
         public void UpdateShapePostion(ShapeModel shapeModel)
         {
-            var targetShape = movingShapesDictionary[shapeModel.Id];
-            targetShape.Left = shapeModel.Left;
-            targetShape.Top = shapeModel.Top;
-            Clients.Others.updateShape(targetShape);
-        }
-
-        public void AddNewShape(ShapeModel shapeModel)
-        {
             movingShapesDictionary[shapeModel.Id] = shapeModel;
-            Clients.Others.newShapeAdded(shapeModel);
-        }
+            Clients.Others.updateShape(shapeModel);
+        }        
     }
 }

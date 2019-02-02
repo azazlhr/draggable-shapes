@@ -67,30 +67,7 @@
                     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 });
-            }
-
-            function updateServerModel() {
-                // Only update server if we have a new movement
-                if (moved) {
-                    moveShapeHub.server.updateShapePostion(shapeModel);
-                    moved = false;
-                }
-            }
-
-            function makeElementDraggable($element) {
-                $element.draggable({
-                    drag: function () {
-                        shapeModel = $(this).offset();
-                        shapeModel.Id = this.id;
-                        moved = true;
-                    },
-                    stop: function () {
-                        shapeModel = $(this).offset();
-                        shapeModel.Id = this.id;
-                        moveShapeHub.server.updateShapePostion(shapeModel);
-                    }
-                });
-            }
+            }      
 
             function addNewCardToDom(shapeModel) {
                 let cardHtmlStr = `<li class="card" id=${shapeModel.Id}>
@@ -108,10 +85,11 @@
 
                 let newShape = { Id: id, Left: 200, Top: 0, Title: title, Text: text };
 
+                newShape.Left = Math.floor((Math.random() * 300) + 300)
+                newShape.Top = Math.floor((Math.random() * 600) + 1);
                 addNewCardToDom(newShape);
-                adjustShapePosition(newShape);
-
-                makeElementDraggable($("#" + id));                
+                
+                adjustShapePosition(newShape);               
 
                 moveShapeHub.server.addNewShape(newShape);
             }
@@ -122,31 +100,19 @@
 
             $(document).ready(function () {
                 
-                moveShapeHub = $.connection.moveShapeHub;                   
-               
-                moveShapeHub.client.updateShape = function (shapeModel) {
-                    adjustShapePosition(shapeModel);
-                    //$("#" + model.Id).css({ left: model.Left, top: model.Top });
-                };
+                moveShapeHub = $.connection.addShapeHub;     
 
                 moveShapeHub.client.newShapeAdded = function (shapeModel) {
-                    debugger;
-                    addNewCardToDom(shapeModel);
-                    makeElementDraggable($("#" + shapeModel.Id));
+                    
+                    addNewCardToDom(shapeModel);                    
 
-                    adjustShapePosition(shapeModel);
-                    //$("#" + model.Id).css({ left: model.Left, top: model.Top });
+                    adjustShapePosition(shapeModel);                    
                 };
 
-                $.connection.hub.start().done(function () {
-
-                    //makeElementDraggable($(".card"));
-                    // Start the client side server update interval
-                    setInterval(updateServerModel, updateRate);
+                $.connection.hub.start().done(function () {   
                     moveShapeHub.server.firstHandShake();
                 });
-            });
-            
+            });          
             
 
         </script>

@@ -9,12 +9,12 @@ namespace DraggableInteractiveDivs.Controllers
     public class HomeController : Controller
     {
         // GET: Home
-        public ActionResult Index()
+        public ActionResult AddShape()
         {
             return View();
         }
 
-        public ActionResult SecondApproach()
+        public ActionResult MoveShape()
         {
             return View();
         }
